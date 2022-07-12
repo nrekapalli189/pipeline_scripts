@@ -1,0 +1,26 @@
+node {
+    stage ('Git Clone') {
+        git credentialsId: 'Github', url: 'https://github.com/nrekapalli189/springboot-with-docker-Rahul_Wagh.git'
+    }
+    stage ('Gradle Build') {
+       sh './gradlew build'
+    }
+    stage ('Docker Build'){
+       sh "docker build -t nrekapalli189/rahulwagh:nagaspingboot ."
+    }
+    stage ('docke push') {
+        withCredentials([string(credentialsId: 'DockerHub_PWD', variable: 'DockerHub_PWD')]) {
+           sh "docker login -u nrekapalli189 -p ${DockerHub_PWD}"
+        }
+        sh "docker push nrekapalli189/rahulwagh:nagaspingboot"
+        
+    }
+    stage ('Kube Deploy') {
+        kubernetesDeploy(
+        configs: 'k8s-spring-boot-deployment.yml' ,
+        kubeconfigId: 'Kube_Config' ,
+        enableConfigSubstitution: true
+        ) 
+    }
+
+    }
