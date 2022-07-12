@@ -1,0 +1,63 @@
+pipeline{
+   agent any
+   
+   //Avail to each stage
+   environment{
+       
+       USER_NAME = 'Naga'
+       user_ID = '123'
+    
+   }
+    stages{
+        stage('list env'){
+    steps{
+        sh 'printenv | sort'
+    }
+        }
+        
+        stage('use env'){
+            
+            //AT STAGE LEVEL
+            environment {
+                user_path = "/var/lib/jenkins"
+            }
+            
+            steps{
+              echo 'BUILD_NM = {env.BUILD_NUMBER}'
+                
+                sh 'echo BUILD_NM= $BUILD_NUMBER'
+                
+                echo "Current user is ${env.USER_NAME}"
+                echo "${env.USER_NAME} userID is ${env.user_ID}"
+                
+                echo "current userpath is ${env.user_path}"
+                
+                script{
+                    env.user_group = "CCDT"
+                    env.poject_name = "Dragon_Fly"
+                    env.trigger_next = "true"
+                }
+                
+                sh 'echo user group and project details are $user_group , $poject_name'
+                
+                withEnv(["user_pwd=secret", "user_is_admin=false", "USER_NAME=Rekapalli"]) {
+                    echo "current user password is ${env.user_pwd}"
+                    sh 'echo current user is admin? $user_is_admin'
+                    //overriding above username
+                    echo "current user name is $USER_NAME"
+                    
+                    
+                }
+            }
+        }
+        stage("something"){
+            when {
+                environment name: "trigger_next", value: "true"
+            }
+        
+        steps {
+            echo "OK!"
+        }
+    }
+    }
+}
