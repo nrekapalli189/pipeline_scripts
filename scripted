@@ -1,0 +1,29 @@
+node {
+    stage("Git Clone"){
+        git credentialsId: 'Github', url: 'https://github.com/nrekapalli189/spring-boot-mongo-docker.git'
+    }
+    stage("maven build"){
+        def Maven_Home = tool name:"Maven-3.8.5", type:"maven"
+        def Maven_CMD = "${Maven_Home}/bin/mvn"
+        sh "${Maven_CMD} clean package"
+    }
+    stage("build docker image"){
+        sh "docker build -t nrekapalli189/myproject2 ."
+    }
+    stage("docker push"){
+        withCredentials([string(credentialsId: 'DockerHub_pwd', variable: 'DockerHub_pwd')]) {
+        sh "docker login -u nrekapalli189 -p ${DockerHub_PWD}"
+        }
+        sh "docker push nrekapalli189/myproject2 "
+        }
+        
+    stage("k8 deploy"){
+       kubernetesDeploy(
+        configs: 'springBootMongo.yml' ,
+        kubeconfigId: 'Kube_Config' ,
+        enableConfigSubstitution: true
+        ) 
+    }
+    
+    
+}
